@@ -2,12 +2,6 @@
 
 A production-ready sales analytics platform built with Python, PostgreSQL, and Streamlit.
 
-## 🚀 Live Demo
-[Add your Render link here after deployment]
-
-## 📸 Screenshot
-[Add screenshot here]
-
 ## Tech Stack
 - **Python 3.11** — ETL pipeline, analytics, API
 - **PostgreSQL** — relational database
