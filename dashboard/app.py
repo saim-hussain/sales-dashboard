@@ -10,12 +10,15 @@ from db.connection import get_engine
 from db.queries import (
     get_total_revenue,
     get_total_orders,
+    get_total_profit,
     get_average_order_value,
     get_revenue_by_month,
     get_revenue_by_region,
     get_top_products,
     get_revenue_by_category,
-    get_order_status_breakdown,
+    get_revenue_by_subcategory,
+    get_revenue_by_segment,
+    get_shipmode_breakdown,
     get_top_customers
 )
 
@@ -33,7 +36,7 @@ st.divider()
 
 # ── KPI Cards ─────────────────────────────────────────────────
 st.subheader("Key Metrics")
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
     st.metric(
@@ -49,6 +52,12 @@ with col2:
 
 with col3:
     st.metric(
+        label="📈 Total Profit",
+        value=f"${get_total_profit():,}"
+    )
+
+with col4:
+    st.metric(
         label="🧾 Avg Order Value",
         value=f"${get_average_order_value():,}"
     )
@@ -56,21 +65,21 @@ with col3:
 st.divider()
 
 # ── Revenue Over Time ──────────────────────────────────────────
-st.subheader("📈 Revenue Over Time")
+st.subheader("📈 Revenue & Profit Over Time")
 revenue_month_df = get_revenue_by_month()
 fig_line = px.line(
     revenue_month_df,
     x="month",
-    y="revenue",
+    y=["revenue", "profit"],
     markers=True,
-    labels={"month": "Month", "revenue": "Revenue ($)"},
+    labels={"month": "Month", "value": "Amount ($)", "variable": "Metric"},
 )
 fig_line.update_layout(hovermode="x unified")
 st.plotly_chart(fig_line, use_container_width=True)
 
 st.divider()
 
-# ── Two columns: Region + Category ────────────────────────────
+# ── Region + Segment ──────────────────────────────────────────
 col_left, col_right = st.columns(2)
 
 with col_left:
@@ -86,6 +95,22 @@ with col_left:
     st.plotly_chart(fig_region, use_container_width=True)
 
 with col_right:
+    st.subheader("👥 Revenue by Segment")
+    segment_df = get_revenue_by_segment()
+    fig_segment = px.pie(
+        segment_df,
+        names="segment",
+        values="revenue",
+        hole=0.4,
+    )
+    st.plotly_chart(fig_segment, use_container_width=True)
+
+st.divider()
+
+# ── Category + Subcategory ────────────────────────────────────
+col_left2, col_right2 = st.columns(2)
+
+with col_left2:
     st.subheader("🛍️ Revenue by Category")
     category_df = get_revenue_by_category()
     fig_category = px.pie(
@@ -95,6 +120,20 @@ with col_right:
         hole=0.4,
     )
     st.plotly_chart(fig_category, use_container_width=True)
+
+with col_right2:
+    st.subheader("📦 Revenue by Sub-Category")
+    subcategory_df = get_revenue_by_subcategory()
+    fig_subcategory = px.bar(
+        subcategory_df,
+        x="revenue",
+        y="sub_category",
+        orientation="h",
+        color="category",
+        labels={"revenue": "Revenue ($)", "sub_category": "Sub-Category"},
+    )
+    fig_subcategory.update_layout(yaxis={"categoryorder": "total ascending"})
+    st.plotly_chart(fig_subcategory, use_container_width=True)
 
 st.divider()
 
@@ -114,21 +153,21 @@ st.plotly_chart(fig_products, use_container_width=True)
 
 st.divider()
 
-#order status + top customers
-col_left2, col_right2 = st.columns(2)
+# ── Ship Mode + Top Customers ─────────────────────────────────
+col_left3, col_right3 = st.columns(2)
 
-with col_left2:
-    st.subheader("📋 Order Status Breakdown")
-    status_df = get_order_status_breakdown()
-    fig_status = px.pie(
-        status_df,
-        names="status",
-        values="total",
+with col_left3:
+    st.subheader("🚚 Orders by Ship Mode")
+    shipmode_df = get_shipmode_breakdown()
+    fig_ship = px.pie(
+        shipmode_df,
+        names="ship_mode",
+        values="total_orders",
         hole=0.4,
     )
-    st.plotly_chart(fig_status, use_container_width=True)
+    st.plotly_chart(fig_ship, use_container_width=True)
 
-with col_right2:
+with col_right3:
     st.subheader("👑 Top 10 Customers")
     customers_df = get_top_customers(limit=10)
     st.dataframe(
@@ -136,15 +175,17 @@ with col_right2:
         use_container_width=True,
         hide_index=True
     )
+
 st.divider()
 
-#__ Raw Data Table__
+# ── Raw Data Table ─────────────────────────────────────────────
 st.subheader("🗃️ Raw Orders Data")
 with get_engine().connect() as conn:
     raw_df = pd.read_sql(
         text("SELECT * FROM vw_order_summary ORDER BY order_date DESC"),
         conn
     )
+
 st.dataframe(raw_df, use_container_width=True, hide_index=True)
 
 csv = raw_df.to_csv(index=False)
