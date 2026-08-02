@@ -18,6 +18,8 @@ A production-ready sales analytics platform built with Python, PostgreSQL, and S
 - Interactive dashboard with charts, KPIs, and filters
 - REST API with 7 endpoints for programmatic data access
 - Unit tested with pytest
+- 02/08/2026 now it uses a real kaggle dataset to produce results
+- added caching to reduce streamlit drawback
 
 ## Project Structure
 sales_dashboard/
