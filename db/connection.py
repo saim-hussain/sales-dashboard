@@ -4,10 +4,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv(
-    "DATABSE_URL",
-    "postgresql://postgres:password@localhost:5432/sales_db"
-)
+# Try Streamlit secrets first, then fall back to environment variables
+try:
+    import streamlit as st
+    DATABASE_URL = st.secrets["DATABASE_URL"]
+except Exception:
+    DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_engine():
     return create_engine(DATABASE_URL, pool_pre_ping=True)
@@ -15,8 +17,8 @@ def get_engine():
 def test_connection():
     engine = get_engine()
     with engine.connect() as conn:
-      result = conn.execute(text("SELECT version()"))
-      print("👍 Connected:", result.scalar())
+        result = conn.execute(text("SELECT version()"))
+        print("✅ Connected:", result.scalar())
 
 if __name__ == "__main__":
     test_connection()
