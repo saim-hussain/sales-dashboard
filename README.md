@@ -62,3 +62,5 @@ streamlit run dashboard/app.py
 # 6. Run API (optional)
 uvicorn api.main:app --reload
 ```
+[Click here to view the live dashboard]
+(https://sales-dashboard-cr9vth5qroaw5nmgksgqfb.streamlit.app/)
